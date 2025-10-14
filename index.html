@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Crossword Puzzle</title>
+    <title>Viticulture & Vinification Crossword</title>
     <style>
         :root {
             --grid-size: 28px;
@@ -51,7 +51,7 @@
             width: 100%;
             height: 100%;
             border: 1px solid var(--border-color);
-            box-sizing: border-box; /* Ensures border is inside the element */
+            box-sizing: border-box;
             text-align: center;
             text-transform: uppercase;
             font-size: calc(var(--grid-size) * 0.6);
@@ -59,7 +59,7 @@
             background-color: var(--cell-bg);
             color: var(--font-color);
             caret-color: #007bff;
-            -webkit-appearance: none; /* Removes default iOS styling */
+            -webkit-appearance: none;
             border-radius: 0;
         }
         .cell input:focus {
@@ -80,7 +80,7 @@
             font-weight: bold;
             color: #555;
             z-index: 1;
-            pointer-events: none; /* Allows clicks to go through to the input */
+            pointer-events: none;
         }
         #clues-container {
             display: flex;
@@ -121,6 +121,54 @@
             background-color: #f0f0f0;
         }
 
+        /* Modal Styles */
+        #modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #modal-content {
+            background-color: #fff;
+            padding: 25px 35px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            text-align: left;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        #modal-content h2 {
+            margin-top: 0;
+            text-align: center;
+        }
+        #modal-content p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        #modal-content ul {
+            padding-left: 20px;
+        }
+        #modal-content .modal-controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        #start-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            font-size: 18px;
+            padding: 12px 25px;
+        }
+        .hidden {
+            display: none;
+        }
+
         /* Responsive design for mobile */
         @media (max-width: 900px) {
             body {
@@ -136,12 +184,29 @@
 </head>
 <body>
 
+    <div id="modal-overlay">
+        <div id="modal-content">
+            <h2>How to Play</h2>
+            <p>Welcome to the Viticulture & Vinification crossword puzzle! A new puzzle is generated from a database of <strong id="term-count"></strong> terms every time you load the page.</p>
+            <ul>
+                <li><strong>Select a word:</strong> Click any square to select a word. The active word will be highlighted.</li>
+                <li><strong>Switch Direction:</strong> Click the same active square again to switch between 'Across' and 'Down'.</li>
+                <li><strong>Enter Letters:</strong> Just start typing! The cursor will automatically move to the next letter in the selected direction.</li>
+                <li><strong>Check Your Work:</strong> Use the 'Check Puzzle' button to see which letters are correct (green) or incorrect (red).</li>
+            </ul>
+            <div class="modal-controls">
+                <button id="start-btn">Start Game</button>
+            </div>
+        </div>
+    </div>
+
     <div id="main-container">
-        <h1>Viniculture Crossword</h1>
+        <h1>Viticulture & Vinification</h1>
         <div id="grid-container"></div>
         <div id="controls">
             <button id="check-btn">Check Puzzle</button>
             <button id="reveal-btn">Reveal Puzzle</button>
+            <button id="new-game-btn" class="hidden">New Game</button>
         </div>
     </div>
     
@@ -175,7 +240,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .filter(pair => pair.includes(':'))
             .map(pair => {
                 const [word, clue] = pair.split(/:(.+)/);
-                // **UPDATED** Sanitize word: remove accents, apostrophes, spaces, hyphens and make uppercase
                 const sanitizedWord = word.trim()
                     .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove accents
                     .replace(/[-\s']/g, '') // Remove hyphens, spaces, and apostrophes
@@ -241,28 +305,19 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < word.word.length; i++) {
             const curX = direction === 'across' ? x + i : x;
             const curY = direction === 'down' ? y + i : y;
-
             if (curX >= GRID_SIZE || curY >= GRID_SIZE) return false;
-
             const gridCell = grid[curY][curX];
             if (gridCell && gridCell !== word.word[i]) return false;
-
             const prevX = direction === 'across' ? x - 1 : x;
             const prevY = direction === 'down' ? y - 1 : y;
             if (i === 0 && grid[prevY] && grid[prevY][prevX]) return false;
-
             const nextX = direction === 'across' ? x + word.word.length : x;
             const nextY = direction === 'down' ? y + word.word.length : y;
             if (i === word.word.length - 1 && grid[nextY] && grid[nextY][nextX]) return false;
-            
             if (direction === 'across') {
-                if ((grid[curY - 1] && grid[curY - 1][curX] && !grid[curY][curX]) || (grid[curY + 1] && grid[curY + 1][curX] && !grid[curY][curX])) {
-                    return false;
-                }
-            } else { // down
-                if ((grid[curY][curX - 1] && !grid[curY][curX]) || (grid[curY][curX + 1] && !grid[curY][curX])) {
-                    return false;
-                }
+                if ((grid[curY - 1] && grid[curY - 1][curX] && !grid[curY][curX]) || (grid[curY + 1] && grid[curY + 1][curX] && !grid[curY][curX])) return false;
+            } else {
+                if ((grid[curY][curX - 1] && !grid[curY][curX]) || (grid[curY][curX + 1] && !grid[curY][curX])) return false;
             }
         }
         return true;
@@ -282,19 +337,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const gridContainer = document.getElementById('grid-container');
         gridContainer.innerHTML = '';
         gridContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-
         const numberGrid = {};
         let clueNumber = 1;
         placedWords.sort((a, b) => a.y - b.y || a.x - b.x);
-
         for (const word of placedWords) {
             const key = `${word.x},${word.y}`;
-            if (!numberGrid[key]) {
-                numberGrid[key] = clueNumber++;
-            }
+            if (!numberGrid[key]) numberGrid[key] = clueNumber++;
             word.number = numberGrid[key];
         }
-
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
                 const cell = document.createElement('div');
@@ -307,7 +357,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     input.dataset.y = r;
                     input.dataset.correct = finalGrid[r][c];
                     cell.appendChild(input);
-
                     const startOfWord = placedWords.find(w => w.relX === c && w.relY === r);
                     if (startOfWord) {
                         const numberSpan = document.createElement('span');
@@ -331,20 +380,15 @@ document.addEventListener('DOMContentLoaded', () => {
             maxX = Math.max(maxX, word.direction === 'across' ? word.x + word.word.length - 1 : word.x);
             maxY = Math.max(maxY, word.direction === 'down' ? word.y + word.word.length - 1 : word.y);
         }
-        
         const padding = 1;
         minX = Math.max(0, minX - padding);
         minY = Math.max(0, minY - padding);
         maxX = Math.min(GRID_SIZE - 1, maxX + padding);
         maxY = Math.min(GRID_SIZE - 1, maxY + padding);
-
         const rows = maxY - minY + 1;
         const cols = maxX - minX + 1;
         const finalGrid = [];
-
-        for (let y = minY; y <= maxY; y++) {
-            finalGrid.push(grid[y].slice(minX, maxX + 1));
-        }
+        for (let y = minY; y <= maxY; y++) finalGrid.push(grid[y].slice(minX, maxX + 1));
         placedWords.forEach(word => {
             word.relX = word.x - minX;
             word.relY = word.y - minY;
@@ -357,24 +401,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const downClues = document.getElementById('down-clues');
         acrossClues.innerHTML = '';
         downClues.innerHTML = '';
-        
-        const sortedByNumber = [...placedWords].sort((a,b) => a.number - b.number);
-        
+        const sortedByNumber = [...placedWords].sort((a, b) => a.number - b.number);
         sortedByNumber.forEach(word => {
             const li = document.createElement('li');
             li.innerHTML = `<strong>${word.number}.</strong> ${word.clue}`;
-            li.id = `clue-${word.direction}-${word.number}`; // ID for strikethrough
-            if (word.direction === 'across') {
-                acrossClues.appendChild(li);
-            } else {
-                downClues.appendChild(li);
-            }
+            li.id = `clue-${word.direction}-${word.number}`;
+            if (word.direction === 'across') acrossClues.appendChild(li);
+            else downClues.appendChild(li);
         });
     }
     
     function addInputListeners() {
-        const inputs = document.querySelectorAll('#grid-container input');
-        inputs.forEach(input => {
+        document.querySelectorAll('#grid-container input').forEach(input => {
             input.addEventListener('click', (e) => handleCellClick(e));
             input.addEventListener('input', (e) => handleInput(e));
             input.addEventListener('keydown', (e) => handleKeyDown(e));
@@ -384,10 +422,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleCellClick(e) {
         const x = parseInt(e.target.dataset.x);
         const y = parseInt(e.target.dataset.y);
-
-        if (activeCell.x === x && activeCell.y === y) {
-            activeDirection = activeDirection === 'across' ? 'down' : 'across';
-        } else {
+        if (activeCell.x === x && activeCell.y === y) activeDirection = activeDirection === 'across' ? 'down' : 'across';
+        else {
             activeCell.x = x;
             activeCell.y = y;
             activeDirection = 'across';
@@ -398,14 +434,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleInput(e) {
         const x = parseInt(e.target.dataset.x);
         const y = parseInt(e.target.dataset.y);
-
         if (e.target.value.length === 1) {
             let nextInput;
-            if (activeDirection === 'across') {
-                nextInput = document.querySelector(`input[data-x="${x + 1}"][data-y="${y}"]`);
-            } else {
-                nextInput = document.querySelector(`input[data-x="${x}"][data-y="${y + 1}"]`);
-            }
+            if (activeDirection === 'across') nextInput = document.querySelector(`input[data-x="${x + 1}"][data-y="${y}"]`);
+            else nextInput = document.querySelector(`input[data-x="${x}"][data-y="${y + 1}"]`);
             if (nextInput) {
                 activeCell.x = parseInt(nextInput.dataset.x);
                 activeCell.y = parseInt(nextInput.dataset.y);
@@ -420,7 +452,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const x = parseInt(e.target.dataset.x);
         const y = parseInt(e.target.dataset.y);
         let nextInput;
-
         switch (e.key) {
             case "ArrowRight": nextInput = document.querySelector(`input[data-x="${x + 1}"][data-y="${y}"]`); break;
             case "ArrowLeft":  nextInput = document.querySelector(`input[data-x="${x - 1}"][data-y="${y}"]`); break;
@@ -428,15 +459,11 @@ document.addEventListener('DOMContentLoaded', () => {
             case "ArrowUp":    nextInput = document.querySelector(`input[data-x="${x}"][data-y="${y - 1}"]`); break;
             case "Backspace":
                 if (!e.target.value) {
-                    if (activeDirection === 'across') {
-                        nextInput = document.querySelector(`input[data-x="${x - 1}"][data-y="${y}"]`);
-                    } else {
-                        nextInput = document.querySelector(`input[data-x="${x}"][data-y="${y - 1}"]`);
-                    }
+                    if (activeDirection === 'across') nextInput = document.querySelector(`input[data-x="${x - 1}"][data-y="${y}"]`);
+                    else nextInput = document.querySelector(`input[data-x="${x}"][data-y="${y - 1}"]`);
                 }
                 break;
         }
-        
         if (nextInput) {
             e.preventDefault();
             activeCell.x = parseInt(nextInput.dataset.x);
@@ -448,13 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function highlightActiveWord() {
         document.querySelectorAll('input.active-word').forEach(el => el.classList.remove('active-word'));
-        const activeWord = placedWords.find(w => 
-            w.direction === activeDirection &&
-            (activeDirection === 'across' 
-                ? w.relY === activeCell.y && activeCell.x >= w.relX && activeCell.x < w.relX + w.word.length 
-                : w.relX === activeCell.x && activeCell.y >= w.relY && activeCell.y < w.relY + w.word.length)
-        );
-
+        const activeWord = placedWords.find(w => w.direction === activeDirection && (activeDirection === 'across' ? w.relY === activeCell.y && activeCell.x >= w.relX && activeCell.x < w.relX + w.word.length : w.relX === activeCell.x && activeCell.y >= w.relY && activeCell.y < w.relY + w.word.length));
         if (activeWord) {
             for (let i = 0; i < activeWord.word.length; i++) {
                 const x = activeWord.direction === 'across' ? activeWord.relX + i : activeWord.relX;
@@ -466,11 +487,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function checkWordCompletion(x, y) {
-        const wordsAtCell = placedWords.filter(w =>
-            (w.direction === 'across' && w.relY === y && x >= w.relX && x < w.relX + w.word.length) ||
-            (w.direction === 'down' && w.relX === x && y >= w.relY && y < w.relY + w.word.length)
-        );
-
+        const wordsAtCell = placedWords.filter(w => (w.direction === 'across' && w.relY === y && x >= w.relX && x < w.relX + w.word.length) || (w.direction === 'down' && w.relX === x && y >= w.relY && y < w.relY + w.word.length));
         wordsAtCell.forEach(word => {
             let currentAttempt = '';
             let isComplete = true;
@@ -478,32 +495,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cellX = word.direction === 'across' ? word.relX + i : word.relX;
                 const cellY = word.direction === 'down' ? word.relY + i : word.relY;
                 const input = document.querySelector(`input[data-x="${cellX}"][data-y="${cellY}"]`);
-                if (input && input.value) {
-                    currentAttempt += input.value.toUpperCase();
-                } else {
-                    isComplete = false;
-                    break;
-                }
+                if (input && input.value) currentAttempt += input.value.toUpperCase();
+                else { isComplete = false; break; }
             }
-
             const clueElement = document.getElementById(`clue-${word.direction}-${word.number}`);
-            if (isComplete && currentAttempt === word.word) {
-                clueElement.classList.add('completed-clue');
-            } else {
-                clueElement.classList.remove('completed-clue');
-            }
+            if (isComplete && currentAttempt === word.word) clueElement.classList.add('completed-clue');
+            else clueElement.classList.remove('completed-clue');
         });
     }
     
     function checkPuzzle() {
         document.querySelectorAll('#grid-container input').forEach(input => {
-            if (input.value.toUpperCase() === input.dataset.correct) {
-                input.style.backgroundColor = '#d4edda';
-            } else if (input.value) {
-                input.style.backgroundColor = '#f8d7da';
-            } else {
-                input.style.backgroundColor = '';
-            }
+            if (input.value.toUpperCase() === input.dataset.correct) input.style.backgroundColor = '#d4edda';
+            else if (input.value) input.style.backgroundColor = '#f8d7da';
+            else input.style.backgroundColor = '';
         });
     }
 
@@ -513,6 +518,9 @@ document.addEventListener('DOMContentLoaded', () => {
             input.style.backgroundColor = '';
             checkWordCompletion(parseInt(input.dataset.x), parseInt(input.dataset.y));
         });
+        document.getElementById('check-btn').classList.add('hidden');
+        document.getElementById('reveal-btn').classList.add('hidden');
+        document.getElementById('new-game-btn').classList.remove('hidden');
     }
     
     function shuffleArray(array) {
@@ -523,13 +531,24 @@ document.addEventListener('DOMContentLoaded', () => {
         return array;
     }
     
+    // --- Modal and Button Setup ---
+    function setupControls() {
+        const modalOverlay = document.getElementById('modal-overlay');
+        const startButton = document.getElementById('start-btn');
+        const newGameButton = document.getElementById('new-game-btn');
+        const termCount = rawWordData.trim().split(';').filter(Boolean).length;
+        document.getElementById('term-count').textContent = termCount;
+        startButton.addEventListener('click', () => modalOverlay.classList.add('hidden'));
+        newGameButton.addEventListener('click', () => window.location.reload());
+        document.getElementById('check-btn').addEventListener('click', checkPuzzle);
+        document.getElementById('reveal-btn').addEventListener('click', revealPuzzle);
+    }
+
     // --- Initialize ---
+    setupControls();
     const words = parseData(rawWordData);
     generateCrossword(words);
     renderPuzzle();
-    
-    document.getElementById('check-btn').addEventListener('click', checkPuzzle);
-    document.getElementById('reveal-btn').addEventListener('click', revealPuzzle);
 });
 </script>
 
