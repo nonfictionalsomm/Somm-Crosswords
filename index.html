@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Crossword Puzzle</title>
+    <style>
+        :root {
+            --grid-size: 25px;
+            --border-color: #333;
+            --bg-color: #f9f9f9;
+            --cell-bg: #fff;
+            --focus-bg: #e0f7ff;
+            --font-color: #222;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--font-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            gap: 40px;
+        }
+        h1, h2 {
+            text-align: center;
+            margin-top: 0;
+            color: #444;
+        }
+        #main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #grid-container {
+            border: 2px solid var(--border-color);
+            display: grid;
+            margin-bottom: 20px;
+        }
+        .cell {
+            width: var(--grid-size);
+            height: var(--grid-size);
+            background-color: var(--border-color);
+            position: relative;
+            font-size: 14px;
+            text-align: center;
+        }
+        .cell input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            text-align: center;
+            text-transform: uppercase;
+            font-size: 14px;
+            padding: 0;
+            background-color: var(--cell-bg);
+            color: var(--font-color);
+            caret-color: #007bff;
+        }
+        .cell input:focus {
+            outline: none;
+            background-color: var(--focus-bg);
+        }
+        .number {
+            position: absolute;
+            top: 1px;
+            left: 2px;
+            font-size: 8px;
+            font-weight: bold;
+            color: #555;
+            z-index: 1;
+        }
+        #clues-container {
+            display: flex;
+            gap: 30px;
+            max-width: 600px;
+        }
+        .clue-list {
+            padding: 0;
+            margin: 0;
+            list-style-type: none;
+        }
+        .clue-list li {
+            margin-bottom: 8px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        .clue-list strong {
+            margin-right: 5px;
+        }
+        #controls {
+            margin-top: 15px;
+            text-align: center;
+        }
+        button {
+            padding: 8px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin: 0 5px;
+            background-color: #fff;
+        }
+        button:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="main-container">
+        <h1>Viniculture Crossword</h1>
+        <div id="grid-container"></div>
+        <div id="controls">
+            <button id="check-btn">Check Puzzle</button>
+            <button id="reveal-btn">Reveal Puzzle</button>
+        </div>
+    </div>
+    
+    <div id="clues-container">
+        <div>
+            <h2>Across</h2>
+            <ul id="across-clues" class="clue-list"></ul>
+        </div>
+        <div>
+            <h2>Down</h2>
+            <ul id="down-clues" class="clue-list"></ul>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const rawWordData = `Acidification:The process of adding acid, typically tartaric acid, to grape must or wine to increase its acidity, common in warm climates where grapes can overripen and lose their natural acidity.;Aeration:The deliberate exposure of wine to oxygen, either during winemaking to assist fermentation or just before serving (decanting) to soften tannins and open up aromas.;Aging:The process of maturing a wine in vessels like barrels, tanks, or bottles to develop more complex tertiary aromas and flavors.;Alcoholic Fermentation:The primary fermentation where yeast converts the sugar in grape must into ethyl alcohol and carbon dioxide, transforming the juice into wine.;Ampelography:The science of identifying and classifying grapevines by observing their physical characteristics, such as leaf shape and grape bunch morphology.;Anthocyanins:The phenolic compounds found in the skins of red grapes that are responsible for the color of red wine.;Anthracnose:A fungal disease, also known as bird's-eye rot, that attacks grapevine shoots, leaves, and berries, leaving black, sunken lesions.;Appellation:A legally defined and protected geographical indication used to identify where the grapes for a wine were grown, which often implies specific regulations on grape varieties and production methods.;Armillaria Root Rot:A destructive fungal disease, also known as shoestring root rot, that attacks and kills the roots of grapevines, leading to vine death.;Aroma:The smells in a wine that originate from the grape variety itself (primary aromas) or from the fermentation process (secondary aromas).;Astringency:The drying, puckering sensation in the mouth caused by the presence of tannins in wine, which bind to proteins in saliva.;Autolysis:The breakdown of dead yeast cells (lees) after fermentation, which releases compounds that add complexity, texture, and bready notes to wine, particularly in traditional method sparkling wines.;Back-blending:The process of blending a small amount of an earlier vintage or a different batch of wine back into a final blend to adjust its character or consistency.;Balling:A scale used to measure the sugar concentration in grape must, which helps in estimating the potential alcohol level of the finished wine. Similar to Brix.;Barrel:A hollow cylindrical container, typically made of oak, used for fermenting and aging wine.;Barrel Fermented:A wine, typically white, that has been fermented in barrels rather than stainless steel tanks, which can add texture, complexity, and subtle oak flavors.;Bâtonnage:The French term for lees stirring, the practice of mixing the lees in a barrel or tank to increase extraction of compounds that add texture and flavor.;Bentonite:A type of clay used as a fining agent to remove excess protein from wine, thereby preventing haze from forming in the finished bottle.;Biodynamic Viticulture:A holistic and spiritual approach to farming based on the teachings of Rudolf Steiner, treating the vineyard as a self-sustaining ecosystem and timing vineyard work to celestial cycles.;Black Rot:A serious fungal disease that affects grapevines, causing reddish-brown spots on leaves and turning berries into black, hard, shriveled mummies.;Bleeding:The process of drawing off a portion of juice from a red wine fermentation to create a rosé. This technique, also known as saignée, also increases the concentration of the remaining red wine.;Blending:The art of mixing wines from different grape varieties, vintages, or barrels to create a final, more balanced and complex wine.;Bloom:The waxy, powdery coating on the surface of grape berries, which contains ambient yeast and protects the grape from moisture loss.;Body:The perceived weight and fullness of a wine on the palate, influenced by factors like alcohol, extract, and glycerin.;Botrytis Cinerea:A fungus that can affect grapes. In humid, misty conditions, it causes a beneficial "noble rot" that concentrates sugars for sweet wines. In damp, rainy conditions, it causes a destructive "grey rot.";Bouquet:The complex smells in a wine that develop during the aging process (tertiary aromas), as opposed to the primary aromas from the grape.;Breathing:The process of exposing a wine to oxygen before serving, typically by decanting, to allow its aromas and flavors to open up.;Brettanomyces:A type of yeast that can spoil a wine, producing undesirable aromas often described as barnyard, sweaty saddle, or band-aid. In very small amounts, some consider it to add complexity.;Brix:A scale used to measure the percentage of sugar in grape juice or must, which is a key indicator of ripeness and potential alcohol.;Budburst:The stage in the annual grapevine life cycle when the buds swell and the first small shoots and leaves emerge in the spring.;Bung:The wooden or silicone stopper used to seal the hole in a wine barrel.;Cane Pruning:A pruning method where one or two long canes from the previous year's growth are retained and trained along a trellis, from which the new season's shoots will grow. The Guyot system is a common example.;Canopy:The parts of the grapevine above the ground, including the trunk, shoots, leaves, and fruit. Canopy management is the practice of managing this growth to control sun exposure and air circulation.;Cap:The layer of grape skins, seeds, and other solid matter that floats to the surface of the must during red wine fermentation, pushed up by carbon dioxide gas.;Cap Management:A crucial set of techniques in red winemaking, such as punch-downs or pump-overs, used to keep the cap moist and extract color, flavor, and tannin from the grape solids.;Carbonic Maceration:A winemaking technique where whole, uncrushed grapes are fermented in a sealed tank filled with carbon dioxide. This results in fruity, low-tannin red wines, famously used in Beaujolais Nouveau.;Cellar:A cool, dark place for storing and aging wine. It can also refer to the winemaking facility itself.;Chaptalization:The process of adding sugar to the unfermented grape must to increase the final alcohol content of the wine, common in cooler climates where grapes may struggle to ripen fully.;Clarification:The process of removing suspended solid particles from a wine to make it clear, which can be achieved through racking, fining, or filtration.;Clone:A group of grapevines that are genetically identical, propagated from a single parent plant through cuttings. Different clones of the same grape variety can have slightly different characteristics.;Closed:A tasting term for a wine that is not showing much aroma or flavor, often because it is too young or going through a developmental phase.;Cold Soak:A pre-fermentation technique, also known as cold maceration, where crushed grapes are kept at a low temperature for a period of time to extract color and flavor compounds from the skins without extracting harsh tannins.;Cold Stabilization:A process where wine is chilled to a low temperature for a period of time to cause tartrate crystals to precipitate out, preventing them from forming in the bottle later.;Cooper:A person who makes or repairs wooden barrels. The cooperage is the barrel-making workshop.;Cordon:The permanent woody arm of a grapevine, trained horizontally along a trellis, from which the fruiting shoots grow. This is the basis of spur pruning.;Corked:A term for a wine that has been spoiled by a contaminated cork, resulting in a fault known as cork taint. The wine will have a musty, moldy aroma due to the chemical TCA.;Coulure:A viticultural hazard where grape flowers fail to develop into berries due to poor weather during flowering, resulting in a poor fruit set and reduced yields.;Cover Crop:Plants grown between the rows of grapevines to prevent erosion, improve soil health, and manage vine vigor by competing for water and nutrients.;Cross:A new grape variety created by cross-pollinating two different grape varieties of the same species (Vitis vinifera). For example, Cabernet Sauvignon is a cross of Cabernet Franc and Sauvignon Blanc.;Crown Gall:A bacterial disease that causes tumor-like galls to form on the trunk and roots of a grapevine, which can girdle and kill the vine.;Crush:The process of breaking the grape berries to release the juice and begin fermentation. The term is also used colloquially for the entire grape harvest and winemaking period.;Cryoextraction:A modern technique that mimics the process of making ice wine by freezing harvested grapes commercially, allowing for the extraction of a concentrated, sugary must.;Cuvée:A specific blend or batch of wine. In Champagne, it can also refer to the first and highest quality juice from the grape pressing.;Decanting:The process of carefully pouring a wine from its bottle into another container, called a decanter, either to separate it from sediment or to aerate it before serving.;Dégorgement:The process in traditional method sparkling winemaking of removing the frozen plug of yeast sediment from the neck of the bottle after riddling.;Destemming:The process of removing the stems from the grape bunches before fermentation, which is done to avoid adding green, herbaceous flavors and harsh tannins to the wine.;Devatting:The process of separating the fermented wine from the solid grape pomace after fermentation is complete. Also known as draining off.;Diurnal Shift:The difference between the daytime high temperature and the nighttime low temperature. A large diurnal shift is beneficial for grape growing as it allows grapes to ripen fully in the day while preserving acidity at night.;Dosage:In sparkling winemaking, this is the addition of a small amount of wine and sugar (liqueur d'expédition) to the bottle after disgorgement, which determines the final sweetness level of the wine.;Downy Mildew:A serious fungal disease that can attack grapevines, particularly in humid conditions, causing yellow, oily spots on leaves and damaging the fruit.;Draining:The process of collecting the free-run juice or wine that flows from a tank or press by gravity, without any mechanical pressure being applied.;Dry:A term for a wine that has no perceptible sweetness, meaning that most or all of the grape sugar has been converted into alcohol during fermentation.;Enology:The science and study of winemaking. An enologist is a person with a scientific degree in winemaking.;En Primeur:The practice of buying wine as "futures," where wine is purchased before it has been bottled and released onto the market.;Esca:A complex and destructive trunk disease caused by a variety of fungi, which rots the woody parts of the vine from the inside out, often leading to sudden vine death or "apoplexy.";Estate-Bottled:A term on a wine label indicating that the wine was produced and bottled by the same entity that grew the grapes, ensuring a chain of quality.;Esters:Aromatic compounds formed during fermentation that contribute many of the fruity and floral aromas found in young wine.;Ethanol:The primary type of alcohol found in wine, which is a natural byproduct of fermentation.;Eutypa Dieback:A fungal trunk disease that causes stunted shoot growth, cankering of the wood, and eventual dieback of the vine's arms or trunk.;Extract:The solid, non-volatile compounds in a wine, such as tannins, sugars, and minerals, that contribute to its body, flavor, and texture.;Fanleaf Degeneration:A virus spread by nematodes that causes deformed, fan-like leaves, poor fruit set, and a significant decline in vine health and productivity.;Fermentation:The biochemical process where yeast consumes sugar and converts it into alcohol and carbon dioxide.;Filtration:A clarification process where wine is passed through a filter to remove yeast cells, bacteria, and other solid particles before bottling.;Fining:A clarification technique where a substance (such as bentonite clay or egg whites) is added to a wine to bind with suspended particles, causing them to clump together and fall out of suspension.;Finish:The lingering impression and flavors of a wine on the palate after it has been swallowed or spat out. The length and quality of the finish are key indicators of a wine's quality.;Flavescence Dorée:A highly infectious phytoplasma disease spread by leafhopper insects that causes yellowing leaves, shriveled grapes, and can quickly kill a grapevine.;Flowering:A stage in the grapevine's annual cycle where small flowers bloom on the vine. Successful pollination of these flowers is necessary for grapes to form.;Fortification:The process of adding a neutral grape spirit to a wine, either during or after fermentation, to increase its alcohol content and stability. This is how fortified wines like Port and Sherry are made.;Free-run Juice:The high-quality juice that drains from crushed grapes by gravity, before any mechanical pressing is applied.;Fruit Set:The stage in the grapevine's life cycle immediately after flowering, where the pollinated flowers develop into tiny, green grape berries.;Glycerol:A natural byproduct of fermentation that has a slightly sweet taste and contributes to the body and texture of a wine.;Grafting:The process of joining the top part of one grapevine (the scion) onto the root system of another (the rootstock). This is commonly done to protect Vitis vinifera vines from the phylloxera louse by grafting them onto resistant American rootstock.;Grape Berry Moth:An insect pest whose larvae burrow into grape berries, causing direct damage and creating entry points for fungal diseases like botrytis.;Green Harvest:The practice of thinning grape bunches from a vine while they are still green and unripe. This is done to reduce the yield and allow the vine to focus its energy on ripening the remaining grapes, thereby increasing their quality.;Guyot:A system of cane pruning where one or two canes are trained along a wire. A single Guyot has one cane, and a double Guyot has two.;Hang Time:The length of time that grapes are left to hang on the vine to ripen before being harvested. Longer hang time can lead to riper flavors and higher sugar levels, but also lower acidity.;Harvest:The process of picking the grapes from the vineyard, which can be done either by hand or by machine.;Hectare:A metric unit of area equal to 2.471 acres, commonly used to measure the size of vineyards.;Hectoliter:A metric unit of volume equal to 100 liters, commonly used to measure the yield of a vineyard.;Herbaceous:A tasting term for the aromas and flavors of herbs, grass, or green vegetables in a wine, which can be a characteristic of certain grape varieties or an indication of underripe grapes.;Hybrid:A grape variety that is a cross between two different grape species, such as Vitis vinifera and a native American species. Hybrids are often bred for disease resistance and cold hardiness.;Hydrogen Sulfide:A chemical compound that can cause a fault in wine, resulting in an unpleasant aroma of rotten eggs. This is often caused by a lack of nitrogen during fermentation.;Hyperoxidation:An esoteric winemaking technique where must is deliberately and heavily oxidized before fermentation to remove unstable phenolic compounds, which can ironically result in a finished white wine that is more resistant to browning.;Ice Wine:A sweet dessert wine made from grapes that have been left to freeze naturally on the vine. The frozen water is removed during pressing, leaving a highly concentrated, sugary must.;Inoculation:The process of adding a cultured strain of yeast to the grape must to initiate and control the fermentation process, as opposed to relying on ambient yeast.;Integrated Pest Management:A sustainable approach to viticulture that uses a combination of methods, including biological controls, to manage pests while minimizing the use of chemical pesticides.;Japanese Beetle:An invasive insect pest that can cause significant damage to vineyards by skeletonizing the leaves of grapevines, which reduces their photosynthetic ability.;Leafroll Virus:A common and damaging virus spread by mealybugs that causes grapevine leaves to roll downwards and turn red (in red varieties) or yellow (in white varieties), reducing yield and quality.;Lees:The sediment of dead yeast cells and other solid particles that settles at the bottom of a fermentation vessel after fermentation is complete.;Lees Stirring:The practice of stirring the lees in a barrel or tank of wine (bâtonnage) to increase the extraction of compounds that add texture, flavor, and complexity.;Length:A tasting term referring to the amount of time the flavors of a wine persist on the palate after it has been swallowed. A long length is a sign of high quality.;Liqueur d'Expédition:The French term for the dosage, a mixture of wine and sugar added to sparkling wine after disgorgement.;Liqueur de Tirage:A mixture of wine, sugar, and yeast that is added to a base wine to initiate the secondary fermentation for sparkling wine production.;Maceration:The process where the solid components of the grape (skins, seeds, and stems) are left in contact with the juice to extract color, flavor, and tannins.;Madeirized:A term for a wine that has been oxidized and heated, resulting in a brownish color and cooked or nutty flavors. This is a fault in most table wines but the desired characteristic of Madeira.;Malic Acid:A sharp, tart acid found in grapes and many other fruits, often described as having the taste of green apples. It can be converted into softer lactic acid through malolactic fermentation.;Malolactic Fermentation:A secondary fermentation, carried out by bacteria, that converts the sharp malic acid in a wine into softer lactic acid. This process adds complexity and a rounder, creamier texture to the wine.;Manual Harvest:The process of picking grapes by hand, which allows for greater selectivity in choosing ripe, healthy bunches but is more labor-intensive and expensive than mechanical harvesting.;Mechanical Harvest:The process of picking grapes using a machine that shakes the vines to dislodge the berries. It is very efficient but less selective than hand harvesting.;Mealybug:An insect pest that feeds on grapevine sap and, more importantly, is a primary vector for spreading damaging viruses like leafroll virus.;Mercaptan:A group of sulfur compounds that can cause a fault in wine, resulting in unpleasant aromas like garlic, onion, or burnt rubber.;Meritage:A term, trademarked in the United States, for a Bordeaux-style blend of red or white wines.;Méthode Champenoise:The traditional method of making sparkling wine, with a secondary fermentation in the bottle. The term is now legally restricted to Champagne, so other regions use "traditional method.";Micro-oxygenation:A modern winemaking technique where very small, controlled amounts of oxygen are introduced into a wine during aging to soften tannins and improve stability.;Millerandage:A viticultural hazard where poor weather during flowering causes a grape bunch to have berries of different sizes and maturities, including very small, seedless berries.;Must:The unfermented grape juice, which can include the skins, seeds, and stems.;Must Weight:The density of the grape must, which is a measure of its sugar content and is used to predict the final alcohol level of the wine.;Native Yeast:The ambient or wild yeasts that are naturally present in the vineyard and winery, which can be used to conduct a spontaneous fermentation.;Nematode:Microscopic roundworms that live in the soil and can damage grapevine roots. Certain types are also vectors for spreading viruses like fanleaf degeneration.;New World:A term for the wine-producing regions outside of the traditional European areas, such as the Americas, Australia, New Zealand, and South Africa.;Noble Rot:The beneficial form of the Botrytis cinerea fungus, which pierces grape skins, allowing water to evaporate and concentrating the sugars, acidity, and flavors to produce exceptional dessert wines.;Non-Vintage:A wine, particularly sparkling wine, that is a blend of wines from multiple vintages. This is done to achieve a consistent house style from year to year.;Oaky:A tasting term for the aromas and flavors of toast, vanilla, spice, and smoke that are imparted to a wine by aging it in oak barrels.;Off-dry:A term for a wine that has a slight, perceptible sweetness.;Old World:A term for the traditional wine-producing regions of Europe, such as France, Italy, Spain, and Germany.;Organic Viticulture:A system of grape growing that avoids the use of synthetic fertilizers, pesticides, and herbicides.;Oxidation:The chemical reaction that occurs when a wine is exposed to too much oxygen, causing it to lose its freshness and develop stale, nutty, or cooked fruit flavors.;pH:A measure of the acidity or alkalinity of a solution. In wine, pH affects its stability, color, and taste. A lower pH means higher acidity.;Phenolics:A group of chemical compounds, including tannins and anthocyanins, found in grape skins, seeds, and stems that affect the taste, color, and texture of a wine.;Phomopsis:A fungal disease that infects the canes, shoots, and leaves of a grapevine, causing lesions and potentially reducing yield.;Phylloxera:A tiny root-eating aphid that devastated the vineyards of Europe in the late 19th century by attacking the roots of Vitis vinifera vines. The solution was to graft European vines onto resistant American rootstock.;Pierce's Disease:A fatal bacterial disease spread by sharpshooter insects that clogs the vine's water-conducting tissues (xylem), causing it to die of dehydration.;Pips:The seeds of a grape, which contain bitter tannins.;Pomace:The solid remains of the grapes after pressing, consisting of skins, seeds, and stems. It can be distilled to make a spirit like grappa.;Post-fermentation Maceration:The practice of leaving a red wine in contact with its skins for a period of time after fermentation is complete to further extract and soften tannins.;Powdery Mildew:A common fungal disease, also known as oidium, that affects grapevines, covering the leaves and fruit with a white, powdery substance that can inhibit ripening and spoil the fruit.;Press:A piece of equipment used to squeeze the juice from grapes. The resulting juice or wine is called press wine.;Pruning:The essential winter practice of cutting back the dormant grapevine's canes and spurs to control its shape and determine the number and position of buds for the next growing season, which influences the yield and quality.;Pump-over:A cap management technique where fermenting wine is pumped from the bottom of the tank and sprayed over the top of the floating cap to extract color, flavor, and tannins.;Punch-down:A cap management technique where the floating cap of grape solids is physically pushed down into the fermenting wine to extract its components.;Racking:The process of carefully moving wine from one barrel or tank to another to separate it from the sediment (lees) that has settled at the bottom.;Red Blotch:A relatively newly discovered virus that can reduce sugar accumulation in grapes, leading to underripe fruit and wines with lower alcohol and altered flavor profiles.;Residual Sugar:The amount of unfermented grape sugar that remains in a wine after fermentation is complete. It is the primary determinant of a wine's sweetness.;Reverse Osmosis:A modern, high-tech process used to fine-tune a wine, such as by reducing its alcohol content or removing volatile acidity.;Riddling:In traditional method sparkling winemaking, this is the process of gradually turning and tilting the bottles to move the yeast sediment into the neck of the bottle for disgorgement.;Rootstock:The root system of a grapevine, onto which a different variety (the scion) is grafted. Rootstocks are often chosen for their resistance to pests like phylloxera and their suitability for specific soil types.;Saignée:The French term for "bleeding," the process of drawing off juice to make rosé, which also concentrates the remaining red wine.;Scion:The top part of a grapevine, including the trunk and shoots, that is grafted onto a rootstock. The scion determines the grape variety that will be produced.;Secondary Fermentation:A second fermentation that occurs in a wine. This can refer to malolactic fermentation or the fermentation in the bottle that creates the bubbles in sparkling wine.;Sediment:The solid material that can precipitate out of a wine over time during aging, consisting of tannins, pigments, and tartrate crystals.;Shatter:The English term for coulure, a viticultural hazard where grape flowers fail to develop into berries.;Site:A specific location where a vineyard is planted. The quality of a site is a key component of terroir.;Skin Contact:The period of time that the grape juice is left in contact with the grape skins, which is essential for extracting color, flavor, and tannin, especially in red and orange wines.;Solera System:A system of fractional blending used for aging wines like Sherry, where younger wine is progressively blended with older wine to create a consistent and complex final product.;Sommelier:A trained and knowledgeable wine professional, often working in a fine restaurant, who specializes in all aspects of wine service as well as wine and food pairing.;Sorting:The process of carefully inspecting the harvested grapes, either by hand or with an optical sorter, to remove any unripe, damaged, or rotten berries before fermentation.;Sour Rot:A disease complex affecting grape berries, caused by a combination of yeast and bacteria that enter through damaged skins, leading to a vinegar-like smell and taste.;Spontaneous Fermentation:A fermentation that is initiated by the native or ambient yeasts that are naturally present in the vineyard and winery, without the addition of cultured yeasts.;Spur Pruning:A pruning method where several short spurs are retained on the permanent cordon of the vine, and each spur will produce one or two new shoots for the growing season.;Stabilization:The winemaking processes, such as cold stabilization and fining, used to ensure that the wine remains clear and stable in the bottle.;Stems:The woody framework of a grape bunch. Including some or all of the stems in a fermentation (whole-cluster fermentation) can add tannin, spice, and structure to a wine.;Still Wine:A wine that is not sparkling and has no effervescence.;Structure:A tasting term referring to the key components of a wine that give it its framework and texture on the palate, primarily acidity, tannin, alcohol, and body.;Sulfur Dioxide:A compound (SO2) that is widely used in winemaking as an antioxidant and antiseptic to prevent spoilage and preserve the wine's freshness.;Sur Lie:A French term for "on the lees," referring to the practice of aging a wine in contact with its dead yeast cells to add complexity, texture, and flavor.;Sustainable Viticulture:A holistic approach to grape growing that is environmentally sound, socially responsible, and economically viable, seeking to minimize negative impacts on the environment.;Table Wine:A general term for a wine that is not sparkling or fortified. In many countries, it also refers to the most basic quality category of wine.;Tank Method:A method of making sparkling wine, also known as the Charmat or Martinotti method, where the secondary fermentation takes place in a large, pressurized tank. This is the method used for Prosecco.;Tannin:A group of phenolic compounds found in grape skins, seeds, and stems (and oak) that contribute to the structure, texture, and aging potential of a wine, perceived as an astringent sensation.;Tartaric Acid:The primary natural acid found in grapes, which is crucial for a wine's crisp taste, stability, and aging potential.;Tartrates:Harmless crystalline deposits of tartaric acid that can precipitate out of a wine, especially when it is chilled. They are often called "wine diamonds.";TCA:An abbreviation for trichloroanisole, the chemical compound responsible for the musty, moldy fault in wine known as cork taint.;Terroir:A French term for the unique combination of a vineyard's environmental factors, including its soil, climate, topography, and other local conditions, that together shape the character of a wine.;Tertiary Aromas:The complex aromas and flavors in a wine that develop over time during the aging process, such as leather, mushroom, and forest floor in red wines, or honey and nuts in white wines.;Toasting:The process of charring the inside of an oak barrel over a fire, which is a critical step in developing the flavor compounds in the wood that will be imparted to the wine.;Topping Up:The practice of adding wine to barrels during aging to replace the small amount that is lost to evaporation (the "angels' share"), which prevents excessive oxidation.;Traditional Method:The method of making sparkling wine, originating in Champagne, where the secondary fermentation that creates the bubbles occurs in the individual bottle.;Trellis:A structure of posts and wires used to support and train grapevines in a vineyard.;Ullage:The empty space, or headspace, between the wine and the cork in a bottle or the bung in a barrel. As a wine ages, the ullage can increase as the wine slowly evaporates.;Unfined:A wine that has not been fined, meaning no fining agents were added to clarify it.;Unfiltered:A wine that has not been filtered before bottling, which some producers believe retains more flavor and texture.;Veraison:The stage in the grape-growing season when the berries begin to change color and soften, marking the onset of ripening.;Vertical Tasting:A wine tasting that involves tasting the same wine from a single producer across multiple different vintages.;Vineyard:A plot of land where grapes are grown.;Vinification:The complete process of converting grapes into wine, from the initial crushing to the final bottling.;Vintage:The year in which the grapes for a wine were harvested. A vintage wine is one made primarily from grapes grown in a single year.;Vintner:A person who makes or sells wine.;Viticulture:The science, study, and practice of grape growing.;Vitis Vinifera:The species of grapevine native to Europe and the Middle East that is responsible for producing most of the world's quality wine grapes, such as Cabernet Sauvignon, Chardonnay, and Pinot Noir.;Volatile Acidity:The presence of acetic acid (the acid of vinegar) in a wine, which can give it a sharp, vinegary smell. In very small amounts, it can add complexity, but in excess, it is a serious fault.;Whole-Cluster Fermentation:The practice of fermenting grape bunches whole, without destemming them first. This technique can add spice, tannin, and structure to the finished wine.;Yeast:The single-celled microorganisms that are responsible for converting the sugar in grape must into alcohol and carbon dioxide during fermentation.;Yield:The amount of grapes or wine produced from a given area of vineyard, often measured in tons per acre or hectoliters per hectare. Lower yields are often associated with higher quality wines.;`;
+
+    const GRID_SIZE = 40; // Max grid size
+    const MAX_WORDS = 50; // Max words to try and place
+
+    let placedWords = [];
+    let grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null));
+
+    function parseData(rawData) {
+        return rawData.trim().split(';')
+            .filter(pair => pair.includes(':'))
+            .map(pair => {
+                const [word, clue] = pair.split(/:(.+)/);
+                // Sanitize word: remove spaces, hyphens and make uppercase
+                const sanitizedWord = word.trim().replace(/[-\s]/g, '').toUpperCase();
+                return { word: sanitizedWord, clue: clue.trim() };
+            })
+            .filter(item => item.word.length > 2); // Filter out very short words
+    }
+
+    function generateCrossword(words) {
+        // Shuffle and sort words by length for better placement probability
+        words.sort(() => Math.random() - 0.5);
+        words.sort((a, b) => b.word.length - a.word.length);
+        words = words.slice(0, MAX_WORDS);
+
+        // Place the first word
+        const firstWord = words.shift();
+        const startX = Math.floor(GRID_SIZE / 4);
+        const startY = Math.floor(GRID_SIZE / 2);
+        placeWord(firstWord, startX, startY, 'across');
+
+        // Try to place the rest of the words
+        let attempts = 0;
+        while (words.length > 0 && attempts < words.length * 2) {
+            const wordToPlace = words.shift();
+            let placed = false;
+            
+            for (const placedWord of shuffleArray([...placedWords])) {
+                for (let i = 0; i < placedWord.word.length; i++) {
+                    for (let j = 0; j < wordToPlace.word.length; j++) {
+                        if (placedWord.word[i] === wordToPlace.word[j]) {
+                            const direction = placedWord.direction === 'across' ? 'down' : 'across';
+                            let newX, newY;
+                            if (direction === 'across') {
+                                newX = placedWord.x - j;
+                                newY = placedWord.y + i;
+                            } else {
+                                newX = placedWord.x + i;
+                                newY = placedWord.y - j;
+                            }
+
+                            if (canPlaceWord(wordToPlace, newX, newY, direction)) {
+                                placeWord(wordToPlace, newX, newY, direction);
+                                placed = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (placed) break;
+                }
+                if (placed) break;
+            }
+
+            if (!placed) {
+                words.push(wordToPlace); // Put it back to try again later
+                attempts++;
+            } else {
+                attempts = 0;
+            }
+        }
+    }
+
+    function canPlaceWord(word, x, y, direction) {
+        if (x < 0 || y < 0) return false;
+
+        for (let i = 0; i < word.word.length; i++) {
+            const curX = direction === 'across' ? x + i : x;
+            const curY = direction === 'down' ? y + i : y;
+
+            if (curX >= GRID_SIZE || curY >= GRID_SIZE) return false;
+
+            // Check if the current cell is empty or has the correct letter
+            const gridCell = grid[curY][curX];
+            if (gridCell && gridCell !== word.word[i]) return false;
+
+            // Check neighbors for conflicts
+            const prevX = direction === 'across' ? x - 1 : x;
+            const prevY = direction === 'down' ? y - 1 : y;
+            if (i === 0 && grid[prevY] && grid[prevY][prevX]) return false;
+
+            const nextX = direction === 'across' ? x + word.word.length : x;
+            const nextY = direction === 'down' ? y + word.word.length : y;
+            if (i === word.word.length - 1 && grid[nextY] && grid[nextY][nextX]) return false;
+
+            if (direction === 'across') {
+                if (grid[curY - 1] && grid[curY - 1][curX] && grid[curY][curX] !== word.word[i]) return false;
+                if (grid[curY + 1] && grid[curY + 1][curX] && grid[curY][curX] !== word.word[i]) return false;
+            } else { // down
+                if (grid[curY][curX - 1] && grid[curY][curX] !== word.word[i]) return false;
+                if (grid[curY][curX + 1] && grid[curY][curX] !== word.word[i]) return false;
+            }
+        }
+        return true;
+    }
+
+    function placeWord(word, x, y, direction) {
+        for (let i = 0; i < word.word.length; i++) {
+            const curX = direction === 'across' ? x + i : x;
+            const curY = direction === 'down' ? y + i : y;
+            grid[curY][curX] = word.word[i];
+        }
+        placedWords.push({ ...word, x, y, direction });
+    }
+
+    function renderPuzzle() {
+        const { finalGrid, rows, cols } = trimGrid();
+        const gridContainer = document.getElementById('grid-container');
+        gridContainer.innerHTML = '';
+        gridContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+        const numberGrid = {};
+        let clueNumber = 1;
+
+        placedWords.sort((a, b) => a.y - b.y || a.x - b.x);
+
+        for (const word of placedWords) {
+            const key = `${word.x},${word.y}`;
+            if (!numberGrid[key]) {
+                numberGrid[key] = clueNumber++;
+            }
+            word.number = numberGrid[key];
+        }
+
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                if (finalGrid[r][c]) {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.maxLength = 1;
+                    input.dataset.x = c;
+                    input.dataset.y = r;
+                    input.dataset.correct = finalGrid[r][c];
+                    cell.appendChild(input);
+
+                    const startOfWord = placedWords.find(w => w.relX === c && w.relY === r);
+                    if (startOfWord) {
+                        const numberSpan = document.createElement('span');
+                        numberSpan.classList.add('number');
+                        numberSpan.textContent = startOfWord.number;
+                        cell.appendChild(numberSpan);
+                    }
+                }
+                gridContainer.appendChild(cell);
+            }
+        }
+
+        renderClues();
+        addInputNavigation();
+    }
+
+    function trimGrid() {
+        let minX = GRID_SIZE, minY = GRID_SIZE, maxX = 0, maxY = 0;
+        for (const word of placedWords) {
+            minX = Math.min(minX, word.x);
+            minY = Math.min(minY, word.y);
+            maxX = Math.max(maxX, word.direction === 'across' ? word.x + word.word.length - 1 : word.x);
+            maxY = Math.max(maxY, word.direction === 'down' ? word.y + word.word.length - 1 : word.y);
+        }
+        
+        const padding = 1;
+        minX = Math.max(0, minX - padding);
+        minY = Math.max(0, minY - padding);
+        maxX = Math.min(GRID_SIZE - 1, maxX + padding);
+        maxY = Math.min(GRID_SIZE - 1, maxY + padding);
+
+        const rows = maxY - minY + 1;
+        const cols = maxX - minX + 1;
+        const finalGrid = [];
+
+        for (let y = minY; y <= maxY; y++) {
+            finalGrid.push(grid[y].slice(minX, maxX + 1));
+        }
+
+        placedWords.forEach(word => {
+            word.relX = word.x - minX;
+            word.relY = word.y - minY;
+        });
+
+        return { finalGrid, rows, cols };
+    }
+
+
+    function renderClues() {
+        const acrossClues = document.getElementById('across-clues');
+        const downClues = document.getElementById('down-clues');
+        acrossClues.innerHTML = '';
+        downClues.innerHTML = '';
+        
+        const sortedByNumber = [...placedWords].sort((a,b) => a.number - b.number);
+        
+        const across = sortedByNumber.filter(w => w.direction === 'across');
+        const down = sortedByNumber.filter(w => w.direction === 'down');
+        
+        across.forEach(word => {
+            const li = document.createElement('li');
+            li.innerHTML = `<strong>${word.number}.</strong> ${word.clue}`;
+            acrossClues.appendChild(li);
+        });
+
+        down.forEach(word => {
+            const li = document.createElement('li');
+            li.innerHTML = `<strong>${word.number}.</strong> ${word.clue}`;
+            downClues.appendChild(li);
+        });
+    }
+    
+    function addInputNavigation() {
+        const inputs = document.querySelectorAll('#grid-container input');
+        inputs.forEach(input => {
+            input.addEventListener('keyup', (e) => {
+                const x = parseInt(e.target.dataset.x);
+                const y = parseInt(e.target.dataset.y);
+                let nextInput;
+                
+                switch (e.key) {
+                    case "ArrowRight": nextInput = document.querySelector(`input[data-x="${x + 1}"][data-y="${y}"]`); break;
+                    case "ArrowLeft":  nextInput = document.querySelector(`input[data-x="${x - 1}"][data-y="${y}"]`); break;
+                    case "ArrowDown":  nextInput = document.querySelector(`input[data-x="${x}"][data-y="${y + 1}"]`); break;
+                    case "ArrowUp":    nextInput = document.querySelector(`input[data-x="${x}"][data-y="${y - 1}"]`); break;
+                    default:
+                        if (e.target.value) { // Move to next on character entry
+                           nextInput = e.target.closest('.cell').nextElementSibling?.querySelector('input');
+                           if (!nextInput) { // Find next row
+                                const currentRow = e.target.closest('.cell').parentElement;
+                                // This logic can be improved to find the next logical input
+                           }
+                        }
+                }
+                
+                if (nextInput) {
+                    nextInput.focus();
+                }
+            });
+        });
+    }
+    
+    function checkPuzzle() {
+        const inputs = document.querySelectorAll('#grid-container input');
+        inputs.forEach(input => {
+            if (input.value.toUpperCase() === input.dataset.correct) {
+                input.style.backgroundColor = '#d4edda'; // green for correct
+            } else if (input.value) {
+                input.style.backgroundColor = '#f8d7da'; // red for incorrect
+            } else {
+                input.style.backgroundColor = ''; // reset
+            }
+        });
+    }
+
+    function revealPuzzle() {
+        const inputs = document.querySelectorAll('#grid-container input');
+        inputs.forEach(input => {
+            input.value = input.dataset.correct;
+            input.style.backgroundColor = '#e0f7ff';
+        });
+    }
+    
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+    
+    // --- Initialize ---
+    const words = parseData(rawWordData);
+    generateCrossword(words);
+    renderPuzzle();
+    
+    document.getElementById('check-btn').addEventListener('click', checkPuzzle);
+    document.getElementById('reveal-btn').addEventListener('click', revealPuzzle);
+});
+</script>
+
+</body>
+</html>
