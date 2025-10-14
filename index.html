@@ -241,8 +241,8 @@ document.addEventListener('DOMContentLoaded', () => {
             .map(pair => {
                 const [word, clue] = pair.split(/:(.+)/);
                 const sanitizedWord = word.trim()
-                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove accents
-                    .replace(/[-\s']/g, '') // Remove hyphens, spaces, and apostrophes
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[-\s']/g, '')
                     .toUpperCase();
                 return { word: sanitizedWord, clue: clue.trim() };
             })
@@ -538,7 +538,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const newGameButton = document.getElementById('new-game-btn');
         const termCount = rawWordData.trim().split(';').filter(Boolean).length;
         document.getElementById('term-count').textContent = termCount;
-        startButton.addEventListener('click', () => modalOverlay.classList.add('hidden'));
+        
+        // **BUG FIX** Directly change the style property to guarantee the element is hidden.
+        startButton.addEventListener('click', () => {
+            modalOverlay.style.display = 'none';
+        });
+
         newGameButton.addEventListener('click', () => window.location.reload());
         document.getElementById('check-btn').addEventListener('click', checkPuzzle);
         document.getElementById('reveal-btn').addEventListener('click', revealPuzzle);
