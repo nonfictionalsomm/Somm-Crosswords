@@ -6,21 +6,21 @@
     <title>Viticulture & Vinification Crossword</title>
     <style>
         :root {
-            --grid-cell-size: 32px; /* Set a consistent, comfortable cell size */
+            --grid-cell-size: 32px; 
             --border-color: #333;
             --bg-color: #f9f9f9;
+            --clue-bg-color: #f1f1f1; /* ADDED: Subtle background for clues */
             --cell-bg: #fff;
             --focus-bg: #e0f7ff;
             --active-word-bg: #cceeff;
             --font-color: #222;
         }
         
-        /* Basic Setup */
         html, body {
             height: 100%;
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Prevent page scroll, we handle it in the game */
+            overflow: hidden; 
         }
 
         body {
@@ -37,16 +37,14 @@
             color: #444;
         }
 
-        /* * NEW CSS GRID LAYOUT: This is the core of the responsive design.
-         * It defines areas for the title, grid, controls, and clues.
-        */
         .game-wrapper {
             display: grid;
             grid-template-areas:
                 "title title"
                 "grid clues"
                 "controls clues";
-            grid-template-columns: 1fr 400px; /* Grid takes remaining space, clues have a fixed width */
+            /* CHANGED: Replaced fixed 400px with a responsive clamp() function */
+            grid-template-columns: 1fr clamp(320px, 30%, 450px); 
             grid-template-rows: auto 1fr auto;
             gap: 20px;
             padding: 20px;
@@ -57,8 +55,9 @@
         #main-container {
             grid-area: grid;
             display: flex;
-            flex-direction: column;
-            min-height: 0; /* Important for flexbox inside grid */
+            align-items: center;    /* ADDED: Center the square grid vertically */
+            justify-content: center; /* ADDED: Center the square grid horizontally */
+            min-height: 0;
         }
         
         #title-header {
@@ -69,8 +68,10 @@
             grid-area: clues;
             display: flex;
             flex-direction: column;
-            overflow-y: auto; /* Allow clues to scroll if they are too long */
-            padding-right: 15px;
+            overflow-y: auto; 
+            padding: 15px; /* ADDED: Padding for better spacing */
+            background-color: var(--clue-bg-color); /* ADDED: Visual separation */
+            border-radius: 8px; /* ADDED: Softened corners */
         }
 
         #controls {
@@ -79,23 +80,24 @@
             text-align: center;
         }
         
-        /*
-         * NEW PAN/ZOOM CONTAINER: This wrapper allows the grid inside to be
-         * larger than the container, enabling panning and zooming.
-        */
         #grid-wrapper {
-            flex-grow: 1; /* Takes up available space in the main container */
+            /* ADDED: aspect-ratio forces the container to be a perfect square */
+            aspect-ratio: 1 / 1;
+            /* ADDED: Constrain the square to its parent's boundaries */
+            width: 100%; 
+            max-width: 100%;
+            max-height: 100%;
+            
             border: 2px solid var(--border-color);
             background-color: #ccc;
-            overflow: hidden; /* Crucial: hides the parts of the grid outside the viewport */
+            overflow: hidden; 
             position: relative;
-            touch-action: none; /* Prevents default browser touch actions like scrolling */
+            touch-action: none; 
         }
 
         #grid-container {
             display: grid;
             position: relative;
-            /* The transform origin is set to the top-left for predictable zooming */
             transform-origin: 0 0; 
         }
 
@@ -207,8 +209,6 @@
         }
         .hidden { display: none; }
 
-        /* * RESPONSIVE MEDIA QUERY: On smaller screens, the layout stacks vertically.
-        */
         @media (max-width: 1000px) {
             .game-wrapper {
                 grid-template-areas:
@@ -220,12 +220,12 @@
                 grid-template-rows: auto minmax(300px, 50%) auto 1fr;
                 padding: 10px;
                 height: 100vh;
-                max-height: -webkit-fill-available; /* Fix for mobile browser UI */
+                max-height: -webkit-fill-available; 
             }
              #clues-container {
-                flex-direction: row; /* Side-by-side clues on mobile */
+                flex-direction: row; 
                 gap: 20px;
-                padding-right: 0;
+                padding: 10px; /* CHANGED: Adjusted padding for mobile */
             }
             .clue-list-wrapper {
                 width: 50%;
@@ -256,7 +256,7 @@
         <h1 id="title-header">Viticulture & Vinification</h1>
 
         <div id="main-container">
-             <div id="grid-wrapper">
+            <div id="grid-wrapper">
                 <div id="grid-container"></div>
             </div>
         </div>
@@ -287,22 +287,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const GRID_SIZE = 40;
     const MAX_WORDS = 35;
     
+    // The rest of the JavaScript is unchanged from the previous version.
+    // It will work perfectly with the new CSS layout.
+    
     let placedWords = [];
     let grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null));
 
     let activeCell = { x: null, y: null };
     let activeDirection = 'across';
 
-    // --- Core Crossword Logic (Mostly Unchanged) ---
+    // --- Core Crossword Logic ---
     function parseData(rawData) {
         return rawData.trim().split(';')
             .filter(pair => pair.includes(':'))
             .map(pair => {
                 const [word, clue] = pair.split(/:(.+)/);
-                 // NEW: Logic to handle special characters as requested
                 const sanitizedWord = word.trim()
-                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove accents
-                    .replace(/[-\s']/g, '') // Remove hyphens, spaces, and apostrophes
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') 
+                    .replace(/[-\s']/g, '') 
                     .toUpperCase();
                 return { word: sanitizedWord, clue: clue.trim() };
             })
@@ -424,7 +426,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (startOfWords.length > 0) {
                          const numberSpan = document.createElement('span');
                          numberSpan.classList.add('number');
-                         // Find the word with the smallest number for this cell
                          const wordWithSmallestNumber = startOfWords.reduce((prev, curr) => prev.number < curr.number ? prev : curr);
                          numberSpan.textContent = wordWithSmallestNumber.number;
                          cell.appendChild(numberSpan);
@@ -662,7 +663,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('reveal-btn').addEventListener('click', revealPuzzle);
     }
     
-    // --- NEW: Pan and Zoom Functionality ---
     function setupPanAndZoom() {
         const wrapper = document.getElementById('grid-wrapper');
         const grid = document.getElementById('grid-container');
@@ -682,11 +682,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         wrapper.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) { // Panning
+            if (e.touches.length === 1) { 
                 panning = true;
                 start = { x: e.touches[0].clientX - point.x, y: e.touches[0].clientY - point.y };
             }
-            if (e.touches.length === 2) { // Zooming
+            if (e.touches.length === 2) {
                 panning = false;
                 initialDistance = getDistance(e.touches[0], e.touches[1]);
             }
@@ -702,9 +702,9 @@ document.addEventListener('DOMContentLoaded', () => {
              if (e.touches.length === 2) {
                 const newDistance = getDistance(e.touches[0], e.touches[1]);
                 const newScale = newDistance / initialDistance;
-                scale = Math.max(0.5, Math.min(scale * newScale, 3)); // Clamp scale between 0.5x and 3x
+                scale = Math.max(0.5, Math.min(scale * newScale, 3)); 
                 updateTransform();
-                initialDistance = newDistance; // Reset for continuous zoom
+                initialDistance = newDistance; 
             }
         });
         
@@ -713,7 +713,6 @@ document.addEventListener('DOMContentLoaded', () => {
             initialDistance = 0;
         });
 
-        // Add mouse wheel zoom for desktop
         wrapper.addEventListener('wheel', (e) => {
             e.preventDefault();
             const xs = (e.clientX - point.x) / scale;
@@ -721,7 +720,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const delta = -e.deltaY;
             
             const newScale = scale * (delta > 0 ? 1.1 : 0.9);
-            scale = Math.max(0.5, Math.min(newScale, 3)); // Clamp scale
+            scale = Math.max(0.5, Math.min(newScale, 3)); 
             
             point.x = e.clientX - xs * scale;
             point.y = e.clientY - ys * scale;
@@ -735,7 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const words = parseData(rawWordData);
     generateCrossword(words);
     renderPuzzle();
-    setupPanAndZoom(); // Activate the new functionality
+    setupPanAndZoom(); 
 });
 </script>
 
